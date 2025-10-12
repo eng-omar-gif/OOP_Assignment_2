@@ -1,6 +1,12 @@
 #include <JuceHeader.h>
 #include "MainComponent.h"
 
+/*
+ * Main.cpp
+ * -----------------------------
+ * This is the entry point of the JUCE application.
+ */
+
 // Our application class
 class SimpleAudioPlayer : public juce::JUCEApplication
 {

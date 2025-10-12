@@ -1,4 +1,13 @@
-﻿#include "MainComponent.h"
+#include "MainComponent.h"
+/*
+ * MainComponent.cpp
+ * -----------------------------
+ * This file implements MainComponent.
+ *
+ * - Initialize and display PlayerGUI.
+ * - Define how components are drawn (background, layout).
+ * - Handle resizing (place the player correctly in the window).
+ */
 
 MainComponent::MainComponent()
 {
@@ -117,4 +126,3 @@ void MainComponent::sliderValueChanged(juce::Slider* slider)
     if (slider == &volumeSlider)
         transportSource.setGain((float)slider->getValue());
 }
-
