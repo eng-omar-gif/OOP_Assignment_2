@@ -1,6 +1,6 @@
 #pragma once
 #include <JuceHeader.h>
-#include "MainComponent.h"
+
 
 /*
  * PlayerAudio.h
@@ -39,3 +39,4 @@ public:
 
 
 };
+
