@@ -7,7 +7,7 @@
  * -----------------------------
  * Handles the AUDIO logic (backend) of the player.
  */
- 
+
 class PlayerAudio {
 private:
 
@@ -21,11 +21,11 @@ public:
     PlayerAudio();
     ~PlayerAudio();
     //Audio
-    
+
     void prepareToPlay(int samplesPerBlockExpected, double sampleRate);
     void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill);
     void releaseResources();
- 
+
     bool loadFile(const juce::File& file);
     void play();
     void stop();
@@ -35,8 +35,7 @@ public:
     double getLength() const;
 
 
-    
+
 
 
 };
-
