@@ -28,6 +28,10 @@ PlayerGui::PlayerGui()
     addAndMakeVisible(metadataLabel);
     metadataLabel.setColour(juce::Label::textColourId, juce::Colours::white);
     metadataLabel.setJustificationType(juce::Justification::centredLeft);
+
+    addAndMakeVisible(playlistBox);
+    playlistBox.setModel(this);
+
 }
 
 PlayerGui::~PlayerGui()
@@ -46,22 +50,28 @@ void PlayerGui::paint(juce::Graphics& g)
 void PlayerGui::resized()
 {
     int margin = 20;
-    int y = 40;
     int buttonWidth = 80;
     int buttonHeight = 35;
+    int y = 60;
 
+    // ===== Buttons Row =====
+    int buttonSpacing = 100;
     loadButton.setBounds(margin, y, buttonWidth, buttonHeight);
-    playButton.setBounds(margin + 100, y, buttonWidth, buttonHeight);
-    stopButton.setBounds(margin + 200, y, buttonWidth, buttonHeight);
-    volumeSlider.setBounds(margin, y + 60, getWidth() - 2 * margin, 30);
+    playButton.setBounds(margin + buttonSpacing, y, buttonWidth, buttonHeight);
+    stopButton.setBounds(margin + 2 * buttonSpacing, y, buttonWidth, buttonHeight);
+    goStartButton.setBounds(margin + 3 * buttonSpacing + 20, y, buttonWidth + 10, buttonHeight);
+    goEndButton.setBounds(margin + 4 * buttonSpacing + 40, y, buttonWidth + 10, buttonHeight);
 
-    // ===== Made by Adham Tamer =====
+    // ===== Volume =====
+    volumeSlider.setBounds(margin, y + 60, getWidth() - 2 * margin, 25);
 
-    goStartButton.setBounds(margin + 420, y, buttonWidth + 10, buttonHeight);
-    goEndButton.setBounds(margin + 520, y, buttonWidth + 10, buttonHeight);
-    metadataLabel.setBounds(margin, y + 120, getWidth() - 2 * margin, 80);
-    // ================================
+    // ===== Metadata =====
+    metadataLabel.setBounds(margin, y + 100, getWidth() - 2 * margin, 70);
+
+    // ===== Playlist =====
+    playlistBox.setBounds(margin, y + 190, getWidth() - 2 * margin, getHeight() - (y + 220));
 }
+
 
 void PlayerGui::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
 {
@@ -97,20 +107,9 @@ void PlayerGui::buttonClicked(juce::Button* button)
                 auto file = fc.getResult();
                 if (file != juce::File{})
                 {
-                    auto* reader = formatManager.createReaderFor(file);
-                    if (reader != nullptr)
-                    {
-                        auto newSource = std::make_unique<juce::AudioFormatReaderSource>(reader, true);
-                        transportSource.setSource(newSource.get(), 0, nullptr, reader->sampleRate);
-                        readerSource.reset(newSource.release());
 
-                        juce::String title = reader->metadataValues.getValue("title", file.getFileNameWithoutExtension());
-                        juce::String artist = reader->metadataValues.getValue("artist", "Unknown Title");
-
-                        double duration = reader->lengthInSamples / reader->sampleRate;
-
-                        metadataLabel.setText("Title: " + title + "\nArtist: " + artist + "\nDuration: " + juce::String(duration, 2) + " sec", juce::dontSendNotification);
-                    }
+                    playlistFiles.add(file.getFullPathName());
+                    playlistBox.updateContent();
                 }
             });
     }
@@ -124,10 +123,11 @@ void PlayerGui::buttonClicked(juce::Button* button)
     {
         if (transportSource.isPlaying())
         {
-
             transportSource.stop();
+            playButton.setButtonText("Play");
         }
-        else {
+        else
+        {
             transportSource.start();
             playButton.setButtonText("Pause");
         }
@@ -138,11 +138,16 @@ void PlayerGui::buttonClicked(juce::Button* button)
 
 
 
+
     if (button == &goStartButton)
+    {
         transportSource.setPosition(0.0);
+    }
 
     if (button == &goEndButton)
+    {
         transportSource.setPosition(transportSource.getLengthInSeconds());
+    }
     // ================================
 }
 
@@ -151,3 +156,44 @@ void PlayerGui::sliderValueChanged(juce::Slider* slider)
     if (slider == &volumeSlider)
         transportSource.setGain((float)slider->getValue());
 }
+
+
+// ===== Added by Adham Tamer =====
+
+int PlayerGui::getNumRows()
+{
+    return playlistFiles.size();
+}
+
+void PlayerGui::paintListBoxItem(int rowNumber, juce::Graphics& g, int width, int height, bool rowIsSelected)
+{
+    if (rowIsSelected)
+        g.fillAll(juce::Colours::darkblue);
+    else
+        g.fillAll(juce::Colours::black);
+
+    g.setColour(juce::Colours::white);
+    g.drawText(playlistFiles[rowNumber], 5, 0, width, height, juce::Justification::centredLeft);
+}
+void PlayerGui::listBoxItemClicked(int row, const juce::MouseEvent&)
+{
+    auto file = juce::File(playlistFiles[row]);
+
+    auto* reader = formatManager.createReaderFor(file);
+    if (reader != nullptr)
+    {
+        auto newSource = std::make_unique<juce::AudioFormatReaderSource>(reader, true);
+        transportSource.setSource(newSource.get(), 0, nullptr, reader->sampleRate);
+        readerSource.reset(newSource.release());
+        transportSource.start();
+
+        juce::String title = reader->metadataValues.getValue("title", file.getFileNameWithoutExtension());
+        juce::String artist = reader->metadataValues.getValue("artist", "Unknown Artist");
+
+
+        double duration = reader->lengthInSamples / reader->sampleRate;
+
+        metadataLabel.setText("Title: " + title + "\nArtist: " + artist + "\nDuration: " + juce::String(duration, 2) + " sec", juce::dontSendNotification);
+    }
+}
+// ================================
